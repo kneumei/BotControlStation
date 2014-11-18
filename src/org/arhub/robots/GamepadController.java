@@ -1,9 +1,7 @@
 package org.arhub.robots;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import jssc.SerialPortException;
 import net.java.games.input.Component;
@@ -18,38 +16,35 @@ public class GamepadController {
 
 	private ArduinoSerialConnection arduinoSerialConnection;
 	private Controller controller;
-	private Map<Component, ComponentConfig> components = new HashMap<Component, GamepadController.ComponentConfig>();
+	private GamepadControllerConfiguration currentGamepadConfiguration = null;
 	private boolean running = false;
 
-	public List<String> getAvailableControllers() {
-		List<String> controllerNames = new ArrayList<String>();
-		for (Controller controller : ControllerEnvironment
-				.getDefaultEnvironment().getControllers()) {
-			controllerNames.add(controller.getName());
+	public List<GamepadControllerConfiguration> getAvailableGamepadControllers() {
+		List<GamepadControllerConfiguration> gamepadConfigrations = new ArrayList<GamepadControllerConfiguration>();
+		for (Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
+			GamepadControllerConfiguration gamepadConfig = new GamepadControllerConfiguration();
+			gamepadConfig.setName(controller.getName());
+
+			for (Component component : controller.getComponents()) {
+				GamepadControllerComponentConfiguration componentConfig = new GamepadControllerComponentConfiguration();
+				componentConfig.setIdentifier(component.getIdentifier());
+				componentConfig.setName(component.getName());
+				componentConfig.setAlias(component.getName());
+				componentConfig.setAnalog(component.isAnalog());
+				gamepadConfig.getComponentConfiguration().add(componentConfig);
+			}
+			gamepadConfigrations.add(gamepadConfig);
 		}
-		return controllerNames;
+		return gamepadConfigrations;
 	}
 
-	public void setController(String controllerName) {
-		for (Controller controller : ControllerEnvironment
-				.getDefaultEnvironment().getControllers()) {
-			if (controller.getName().equals(controllerName)) {
+	public void setControllerConfiguration(GamepadControllerConfiguration gamepadConfiguration) {
+		for (Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
+			if (controller.getName().equals(gamepadConfiguration.getName())) {
 				this.controller = controller;
 			}
+			this.currentGamepadConfiguration = gamepadConfiguration;
 		}
-	}
-
-	public List<String> getAvailableComponents() {
-		List<String> componentNames = new ArrayList<String>();
-		for (Component component : controller.getComponents()) {
-			componentNames.add(component.getName());
-		}
-		return componentNames;
-	}
-
-	public void ObserveController(Component gamepadComponent, String name,
-			ValueRange range) {
-
 	}
 
 	public void Start() {
@@ -63,20 +58,27 @@ public class GamepadController {
 			public void run() {
 				while (running) {
 					List<ControlState> controlStates = new ArrayList<ControlState>();
-					for (Component component : components.keySet()) {
-						ComponentConfig config = components.get(component);
-						controlStates.add(new ControlState(config.name,
-								config.valueRange.GetValue(component
-										.getPollData())));
+					controller.poll();
+					for (GamepadControllerComponentConfiguration componentConfig : currentGamepadConfiguration
+							.getComponentConfiguration()) {
+
+						if (!componentConfig.isActive())
+							continue;
+
+						Component component = controller.getComponent(componentConfig.getIdentifier());
+						int data = componentConfig.getValueRange().GetValue(component.getPollData());
+						ControlState state = new ControlState(componentConfig.getAlias(), data);
+						controlStates.add(state);
 					}
 					try {
+						System.out.println(controlStates);
 						arduinoSerialConnection.SendGamepadState(controlStates);
 					} catch (SerialPortException e1) {
 						running = false;
 					}
 
 					try {
-						Thread.sleep(250);
+						Thread.sleep(1000);
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 						running = false;
@@ -90,11 +92,6 @@ public class GamepadController {
 
 	public void Stop() {
 		running = false;
-	}
-
-	private class ComponentConfig {
-		public String name;
-		public ValueRange valueRange;
 	}
 
 }

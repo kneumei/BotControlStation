@@ -21,23 +21,24 @@ public class ArduinoSerialConnection {
 	public void Connect(String comPort) throws SerialPortException {
 		serialPort = new SerialPort(comPort);
 		serialPort.openPort();
-		serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8,
-				SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+		serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
+				SerialPort.PARITY_NONE);
 	}
 
-	public void SendGamepadState(List<ControlState> controlStates)
-			throws SerialPortException {
+	public void SendGamepadState(List<ControlState> controlStates) throws SerialPortException {
 		List<String> states = new ArrayList<String>();
 		for (ControlState controlState : controlStates) {
 			states.add(controlState.toString());
 		}
 
-		serialPort.writeString(StringUtils.join(states, "|"));
+		if (serialPort != null) {
+			serialPort.writeString(StringUtils.join(states, "|"));
+		}
+
 	}
 
-	public void disconnect() throws SerialPortException{
+	public void disconnect() throws SerialPortException {
 		serialPort.closePort();
-		
 	}
 
 }
