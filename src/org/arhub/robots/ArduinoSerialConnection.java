@@ -28,12 +28,13 @@ public class ArduinoSerialConnection {
 	public void SendGamepadState(List<ControlState> controlStates) throws SerialPortException {
 		List<String> states = new ArrayList<String>();
 		for (ControlState controlState : controlStates) {
-			states.add(controlState.toString());
+			states.add(Integer.toString(controlState.value));
 		}
 
 		if (serialPort != null) {
-			serialPort.writeString(StringUtils.join(states, "|"));
+			serialPort.writeBytes(((StringUtils.join(states, ",") + "\n").getBytes()));
 		}
+		System.out.println(StringUtils.join(states, ","));
 
 	}
 

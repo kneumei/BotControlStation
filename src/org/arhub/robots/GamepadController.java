@@ -71,14 +71,13 @@ public class GamepadController {
 						controlStates.add(state);
 					}
 					try {
-						System.out.println(controlStates);
 						arduinoSerialConnection.SendGamepadState(controlStates);
 					} catch (SerialPortException e1) {
 						running = false;
 					}
 
 					try {
-						Thread.sleep(1000);
+						Thread.sleep(200);
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 						running = false;
