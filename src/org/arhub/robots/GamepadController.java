@@ -84,6 +84,7 @@ public class GamepadController {
 					}
 
 				}
+				System.out.println("Done sending controller state");
 
 			}
 		}).start();
