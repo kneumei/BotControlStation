@@ -2,8 +2,23 @@ package org.arhub.robots;
 
 public abstract class ValueRange {
 
+	private boolean isInverted;
+	
+	public boolean isInverted() {
+		return isInverted;
+	}
+
+	public void setInverted(boolean isInverted) {
+		this.isInverted = isInverted;
+	}
+
 	public int GetValue(float x) {
-		return map(x, getInMin(), getInMax(), getOutMin(), getOutMax()).intValue();
+		if(isInverted){
+			return map(x, getInMin(), getInMax(), getOutMax(), getOutMin()).intValue();
+		}else{
+			return map(x, getInMin(), getInMax(), getOutMin(), getOutMax()).intValue();
+		}
+		
 	}
 
 	public abstract float getInMin();

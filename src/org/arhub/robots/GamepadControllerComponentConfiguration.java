@@ -4,7 +4,7 @@ import net.java.games.input.Component.Identifier;
 
 public class GamepadControllerComponentConfiguration {
 	private String name;
-	private String alias;
+	private boolean isInverted;
 	private boolean isAnalog;
 	private ValueRange valueRange;
 	private Identifier identifier;
@@ -18,12 +18,12 @@ public class GamepadControllerComponentConfiguration {
 		this.name = name;
 	}
 
-	public String getAlias() {
-		return alias;
+	public boolean isInverted() {
+		return isInverted;
 	}
 
-	public void setAlias(String alias) {
-		this.alias = alias;
+	public void setInverted(boolean isInverted) {
+		this.isInverted = isInverted;
 	}
 
 	public boolean isAnalog() {
@@ -40,6 +40,7 @@ public class GamepadControllerComponentConfiguration {
 	}
 
 	public ValueRange getValueRange() {
+		valueRange.setInverted(isInverted);
 		return valueRange;
 	}
 

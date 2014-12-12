@@ -21,6 +21,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import jssc.SerialPortException;
 
@@ -108,20 +110,21 @@ public class BotControlStationUI {
 
 		panel.setLayout(new GridBagLayout());
 
-		final JComboBox<GamepadControllerConfiguration> gamePads = new JComboBox<GamepadControllerConfiguration>(
+		final JComboBox<GamepadControllerConfiguration> gamePadSelectionDropDown = new JComboBox<GamepadControllerConfiguration>(
 				controller.getAvailableGamepadControllers().toArray(new GamepadControllerConfiguration[] {}));
 
-		gamePads.setMaximumSize(gamePads.getPreferredSize());
+		gamePadSelectionDropDown.setMaximumSize(gamePadSelectionDropDown.getPreferredSize());
 
 		final GamepadControllerConfigurationPane compontentConfigPane = new GamepadControllerConfigurationPane();
 
-		gamePads.addActionListener(new ActionListener() {
+		gamePadSelectionDropDown.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				GamepadControllerConfiguration gamepadConfiguration = gamePads.getItemAt(gamePads.getSelectedIndex());
+				GamepadControllerConfiguration gamepadConfiguration = gamePadSelectionDropDown.getItemAt(gamePadSelectionDropDown.getSelectedIndex());
 				compontentConfigPane.setGamepadControllerConfiguration(gamepadConfiguration);
 				compontentConfigPane.revalidate();
+				controller.setControllerConfiguration(gamepadConfiguration);
 			}
 		});
 
@@ -135,9 +138,7 @@ public class BotControlStationUI {
 			public void actionPerformed(ActionEvent arg0) {
 				disableButton.setEnabled(true);
 				enableButton.setEnabled(false);
-				controller.setControllerConfiguration(compontentConfigPane.getComponentConfiguration());
 				controller.Start();
-
 			}
 		});
 
@@ -148,13 +149,12 @@ public class BotControlStationUI {
 				disableButton.setEnabled(false);
 				enableButton.setEnabled(true);
 				controller.Stop();
-
 			}
 		});
 
 		JPanel controlPane = new JPanel();
 		controlPane.setLayout(new FlowLayout());
-		controlPane.add(gamePads);
+		controlPane.add(gamePadSelectionDropDown);
 		controlPane.add(enableButton);
 		controlPane.add(disableButton);
 
@@ -238,63 +238,56 @@ public class BotControlStationUI {
 
 		private static final long serialVersionUID = 1L;
 
-		private GamepadControllerConfiguration gamepadConfiguration;
-		private List<GamepadControllerComponentConfigurationPane> panes = new ArrayList<>();
-
 		public GamepadControllerConfigurationPane() {
 			setLayout(new GridLayout(0, 2));
 		}
-
-		public GamepadControllerConfiguration getComponentConfiguration() {
-
-			for (GamepadControllerComponentConfigurationPane pane : panes) {
-				pane.updateGamepadControllerComponentConfiguration();
-			}
-
-			return gamepadConfiguration;
-		}
-
-		public void setGamepadControllerConfiguration(GamepadControllerConfiguration gamepadConfiguration) {
-			this.gamepadConfiguration = gamepadConfiguration;
-
+		
+		public void setGamepadControllerConfiguration(GamepadControllerConfiguration gamepadConfiguration){
+			
 			this.removeAll();
 
-			for (GamepadControllerComponentConfiguration config : this.gamepadConfiguration.getComponentConfiguration()) {
-				GamepadControllerComponentConfigurationPane pane = new GamepadControllerComponentConfigurationPane();
-				pane.setGamepadControllerComponentConfiguration(config);
+			for (GamepadControllerComponentConfiguration config : gamepadConfiguration.getComponentConfiguration()) {
+				GamepadControllerComponentConfigurationPane pane = new GamepadControllerComponentConfigurationPane(
+						config);
 				this.add(pane);
-				panes.add(pane);
 			}
-
 		}
 	}
 
 	private class GamepadControllerComponentConfigurationPane extends JPanel {
 		private static final long serialVersionUID = 1L;
 
-		private GamepadControllerComponentConfiguration config;
-		JCheckBox checkBox;
-		JTextField aliasBox;
+		private JCheckBox selectedCheckBox;
+		private JCheckBox invertedCheckBox;
 
-		public GamepadControllerComponentConfiguration updateGamepadControllerComponentConfiguration() {
-			config.setAlias(aliasBox.getText());
-			config.setActive(checkBox.isSelected());
-			return config;
-		}
-
-		public void setGamepadControllerComponentConfiguration(GamepadControllerComponentConfiguration config) {
-			this.config = config;
+		public GamepadControllerComponentConfigurationPane(final GamepadControllerComponentConfiguration config) {
 
 			JPanel pane = new JPanel();
 			pane.setAlignmentY(Component.LEFT_ALIGNMENT);
 
-			this.checkBox = new JCheckBox(config.getName());
-			this.aliasBox = new JTextField(config.getAlias());
-			aliasBox.setPreferredSize(new Dimension(120, aliasBox.getPreferredSize().height));
+			this.selectedCheckBox = new JCheckBox(config.getName());
+			this.invertedCheckBox = new JCheckBox("Invert");
 
-			pane.add(checkBox);
-			pane.add(aliasBox);
+			pane.add(selectedCheckBox);
+			pane.add(invertedCheckBox);
 			add(pane);
+
+			selectedCheckBox.addChangeListener(new ChangeListener() {
+
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					config.setActive(selectedCheckBox.isSelected());
+				}
+			});
+			
+			invertedCheckBox.addChangeListener(new ChangeListener() {
+				
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					config.setInverted(invertedCheckBox.isSelected());
+					
+				}
+			});
 		}
 
 	}

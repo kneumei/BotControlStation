@@ -29,7 +29,7 @@ public class GamepadController {
 				GamepadControllerComponentConfiguration componentConfig = new GamepadControllerComponentConfiguration();
 				componentConfig.setIdentifier(component.getIdentifier());
 				componentConfig.setName(component.getName());
-				componentConfig.setAlias(component.getName());
+				componentConfig.setInverted(false);
 				componentConfig.setAnalog(component.isAnalog());
 				gamepadConfig.getComponentConfiguration().add(componentConfig);
 			}
@@ -67,13 +67,13 @@ public class GamepadController {
 
 						Component component = controller.getComponent(componentConfig.getIdentifier());
 						int data = componentConfig.getValueRange().GetValue(component.getPollData());
-						ControlState state = new ControlState(componentConfig.getAlias(), data);
+						ControlState state = new ControlState(componentConfig.getName(), data);
 						controlStates.add(state);
 					}
 					try {
 						arduinoSerialConnection.SendGamepadState(controlStates);
 					} catch (SerialPortException e1) {
-						running = false;
+						//eat the exception
 					}
 
 					try {
